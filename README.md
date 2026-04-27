@@ -25,6 +25,11 @@ A simple and efficient RESTful API for managing todo tasks, built with Express.j
 - ✅ Create, read, update, and delete todos
 - ✅ Bulk insert multiple todos at once
 - ✅ Todo status tracking (Pending, In Progress, Complete)
+- ✅ Custom instance methods for filtering by status (Completed, Pending, In Progress)
+- ✅ User authentication with JWT (JSON Web Tokens)
+- ✅ Secure password hashing with bcrypt
+- ✅ User signup and login endpoints
+- ✅ Environment variables management with dotenv
 - ✅ MongoDB integration with Mongoose ODM
 - ✅ Proper error handling
 - ✅ JSON request/response format
@@ -73,11 +78,21 @@ This will install all required packages:
 
 ## Getting Started
 
-### 1. Ensure MongoDB is Running
+### 1. Configure Environment Variables
+
+Create a `.env` file in the project root with the following variable:
+
+```env
+JWT_SECRET=your_secret_key_here
+```
+
+The JWT_SECRET is used to sign and verify JWT tokens. You should generate a strong secret key for production.
+
+### 2. Ensure MongoDB is Running
 
 Make sure your MongoDB server is running on `localhost:27017` (default port).
 
-### 2. Start the Development Server
+### 3. Start the Development Server
 
 ```bash
 npm start
@@ -295,6 +310,134 @@ Deletes a todo by ID.
 }
 ```
 
+### Get Completed Todos
+
+```
+GET /todo/completed
+```
+
+Returns all todos with "Completed" status.
+
+**Response:**
+
+```json
+{
+    "message": "Success",
+    "todos": [...]
+}
+```
+
+### Get Pending Todos
+
+```
+GET /todo/pending
+```
+
+Returns all todos with "Pending" status.
+
+**Response:**
+
+```json
+{
+    "message": "Success",
+    "todos": [...]
+}
+```
+
+### Get In-Progress Todos
+
+```
+GET /todo/in-progress
+```
+
+Returns all todos with "In Progress" status.
+
+**Response:**
+
+```json
+{
+    "message": "Success",
+    "todos": [...]
+}
+```
+
+## User Authentication Endpoints
+
+All user endpoints are prefixed with `/user`
+
+### User Signup
+
+```
+POST /user/signup
+```
+
+Creates a new user account with encrypted password.
+
+**Request Body:**
+
+```json
+{
+    "name": "John Doe",
+    "username": "johndoe",
+    "password": "securepassword123",
+    "status": "active"
+}
+```
+
+**Response:**
+
+```json
+{
+    "message": "User was created successfully!"
+}
+```
+
+**Notes:**
+
+- Password is hashed using bcrypt before storing
+- Username should be unique in production
+- Status enum: "active" or "inactive"
+
+### User Login
+
+```
+POST /user/login
+```
+
+Authenticates user and returns JWT access token.
+
+**Request Body:**
+
+```json
+{
+    "username": "johndoe",
+    "password": "securepassword123"
+}
+```
+
+**Success Response:**
+
+```json
+{
+    "message": "Login Successful!",
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Error Response:**
+
+```json
+{
+    "error": "Authentication failure!"
+}
+```
+
+**Notes:**
+
+- JWT token expires in 10 hours
+- Token is required for protected routes (future implementation)
+- Password is verified using bcrypt comparison
+
 ## Data Model
 
 ### Todo Schema
@@ -362,24 +505,58 @@ const inProgressTodos = await todo.findInProgress();
 
 **Returns:** Array of todo objects with status "In Progress"
 
+### User Schema
+
+The User model has the following fields:
+
+| Field      | Type   | Required | Description                    |
+| ---------- | ------ | -------- | ------------------------------ |
+| `name`     | String | ✅ Yes   | User's full name               |
+| `username` | String | ✅ Yes   | Username for login             |
+| `password` | String | ✅ Yes   | Hashed password (bcrypt)       |
+| `status`   | String | ❌ No    | Status: "active" or "inactive" |
+
+**Example:**
+
+```javascript
+{
+  "name": "John Doe",
+  "username": "johndoe",
+  "password": "$2b$10$...", // Hashed with bcrypt
+  "status": "active"
+}
+```
+
+**Security Notes:**
+
+- Passwords are hashed using bcrypt with salt rounds of 10
+- Never store plain text passwords
+- JWT tokens expire in 10 hours for security
+
 ## Project Structure
 
 ```
 todo-api-using-express-mongoose/
 ├── index.js                 # Main application entry point
 ├── package.json             # Project dependencies and scripts
+├── .env                     # Environment variables (JWT_SECRET)
 ├── README.md                # Project documentation
 ├── routeHandler/
-│   └── todoHandler.js       # Todo API route handlers
+│   ├── todoHandler.js       # Todo API route handlers
+│   └── userHandler.js       # User authentication route handlers
 └── schemas/
-    └── todoSchema.js        # Mongoose schema definition
+    ├── todoSchema.js        # Todo schema definition
+    └── userSchema.js        # User schema definition
 ```
 
 ### File Descriptions
 
-- **index.js** - Express app setup, MongoDB connection, and server startup
-- **routeHandler/todoHandler.js** - All CRUD operation route handlers
-- **schemas/todoSchema.js** - MongoDB schema definition with validation
+- **index.js** - Express app setup, MongoDB connection, dotenv config, and server startup
+- **routeHandler/todoHandler.js** - Todo CRUD operation route handlers
+- **routeHandler/userHandler.js** - User signup and login route handlers with JWT and bcrypt
+- **schemas/todoSchema.js** - Todo schema with instance methods
+- **schemas/userSchema.js** - User schema with bcrypt password hashing
+- **.env** - Environment variables including JWT_SECRET
 
 ## Development
 
@@ -411,16 +588,37 @@ You can test the API using popular tools:
 1. Download and install [Postman](https://www.postman.com/downloads/)
 2. Create a new collection for this API
 3. Add requests for each endpoint:
-    - **GET** `http://localhost:3000/todo` - Get all todos
-    - **GET** `http://localhost:3000/todo/:id` - Get todo by ID
-    - **POST** `http://localhost:3000/todo` - Create todo
-    - **POST** `http://localhost:3000/todo/bulk` - Bulk insert
-    - **PUT** `http://localhost:3000/todo/:id` - Update todo
-    - **DELETE** `http://localhost:3000/todo/:id` - Delete todo
+
+**Todo Endpoints:**
+
+- **GET** `http://localhost:3000/todo` - Get all todos
+- **GET** `http://localhost:3000/todo/:id` - Get todo by ID
+- **GET** `http://localhost:3000/todo/completed` - Get completed todos
+- **GET** `http://localhost:3000/todo/pending` - Get pending todos
+- **GET** `http://localhost:3000/todo/in-progress` - Get in-progress todos
+- **POST** `http://localhost:3000/todo` - Create todo
+- **POST** `http://localhost:3000/todo/bulk` - Bulk insert todos
+- **PUT** `http://localhost:3000/todo/:id` - Update todo
+- **DELETE** `http://localhost:3000/todo/:id` - Delete todo
+
+**User Authentication Endpoints:**
+
+- **POST** `http://localhost:3000/user/signup` - Create new user
+- **POST** `http://localhost:3000/user/login` - Login user
 
 ### Using cURL
 
 ```bash
+# User signup
+curl -X POST http://localhost:3000/user/signup \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe","username":"johndoe","password":"password123","status":"active"}'
+
+# User login
+curl -X POST http://localhost:3000/user/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"johndoe","password":"password123"}'
+
 # Get all todos
 curl http://localhost:3000/todo
 
@@ -446,7 +644,11 @@ curl -X DELETE http://localhost:3000/todo/507f1f77bcf86cd799439011
 
 ## Environment Variables
 
-The application currently uses hardcoded MongoDB connection. To configure custom settings, you can modify `index.js`:
+The application uses the following environment variables in `.env`:
+
+- **JWT_SECRET**: Secret key for signing and verifying JWT tokens (required)
+
+MongoDB connection details are currently hardcoded in `index.js`:
 
 - **Database URL**: `mongodb://localhost/todos`
 - **Server Port**: `3000`
