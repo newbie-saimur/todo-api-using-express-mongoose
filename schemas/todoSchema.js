@@ -19,4 +19,10 @@ const todoSchema = new Schema({
     },
 });
 
+todoSchema.methods = {
+    findCompleted: () => mongoose.model('Todo').find({ status: 'Completed' }),
+    findPending: () => mongoose.model('Todo').find({ status: 'Pending' }),
+    findInProgress: () => mongoose.model('Todo').find({ status: 'In Progress' }),
+};
+
 module.exports = todoSchema;

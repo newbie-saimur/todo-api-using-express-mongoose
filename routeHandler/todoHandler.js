@@ -10,9 +10,42 @@ router.get('/', async (req, res) => {
     try {
         const savedTodos = await Todo.find().limit(5);
         const message = savedTodos.length >= 0 ? 'Success' : 'There was no saved todo!';
-        res.status(201).json({ message, todos: savedTodos });
+        res.status(201).json({ message, data: savedTodos });
     } catch (err) {
         res.status(500).json({ message: 'There was an error!' });
+    }
+});
+
+// Get only completed TODOs
+router.get('/completed', async (req, res) => {
+    try {
+        const todo = new Todo();
+        const data = await todo.findCompleted().limit(5);
+        res.status(201).json({ message: 'Success', data });
+    } catch (err) {
+        res.status(500).json({ error: err });
+    }
+});
+
+// Get only pending TODOs
+router.get('/pending', async (req, res) => {
+    try {
+        const todo = new Todo();
+        const data = await todo.findPending().limit(5);
+        res.status(201).json({ message: 'Success', data });
+    } catch (err) {
+        res.status(500).json({ error: err });
+    }
+});
+
+// Get only in progress TODOs
+router.get('/in-progress', async (req, res) => {
+    try {
+        const todo = new Todo();
+        const data = await todo.findInProgress().limit(5);
+        res.status(201).json({ message: 'Success', data });
+    } catch (err) {
+        res.status(500).json({ error: err });
     }
 });
 
@@ -20,7 +53,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const savedTodo = await Todo.find({ _id: req.params.id });
-        res.status(201).json({ message: 'Success', todo: savedTodo });
+        res.status(201).json({ message: 'Success', data: savedTodo });
     } catch (err) {
         res.status(500).json({ message: 'There was an error!' });
     }
@@ -31,7 +64,7 @@ router.post('/', async (req, res) => {
     try {
         const newTodo = new Todo(req.body);
         const savedTodo = await newTodo.save();
-        res.status(201).json({ message: 'Todo was inserted successfully!', todo: savedTodo });
+        res.status(201).json({ message: 'Todo was inserted successfully!', data: savedTodo });
     } catch (err) {
         res.status(500).json({ message: 'There was an error!' });
     }
@@ -41,7 +74,7 @@ router.post('/', async (req, res) => {
 router.post('/bulk', async (req, res) => {
     try {
         const savedTodos = await Todo.insertMany(req.body);
-        res.status(201).json({ message: 'Todos were inserted successfully!', todos: savedTodos });
+        res.status(201).json({ message: 'Todos were inserted successfully!', data: savedTodos });
     } catch (err) {
         res.status(500).json({ message: 'There was an error!' });
     }
@@ -51,7 +84,7 @@ router.post('/bulk', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const updatedTodo = await Todo.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.status(201).json({ message: 'Todo was updated successfully!', todo: updatedTodo });
+        res.status(201).json({ message: 'Todo was updated successfully!', data: updatedTodo });
     } catch (err) {
         res.status(500).json({ message: 'There was an error!' });
     }
@@ -61,7 +94,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const deletedTodo = await Todo.findByIdAndDelete(req.params.id);
-        res.status(201).json({ message: 'Todo was deleted successfully!', todo: deletedTodo });
+        res.status(201).json({ message: 'Todo was deleted successfully!', data: deletedTodo });
     } catch (err) {
         res.status(500).json({ message: 'There was an error!' });
     }

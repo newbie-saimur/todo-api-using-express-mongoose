@@ -319,6 +319,49 @@ The Todo model has the following fields:
 }
 ```
 
+### Schema Instance Methods
+
+The Todo schema includes custom instance methods to find todos by status:
+
+#### `findCompleted()`
+
+Retrieves all todos with status "Completed".
+
+**Usage:**
+
+```javascript
+const todo = new Todo();
+const completedTodos = await todo.findCompleted();
+```
+
+**Returns:** Array of todo objects with status "Completed"
+
+#### `findPending()`
+
+Retrieves all todos with status "Pending".
+
+**Usage:**
+
+```javascript
+const todo = new Todo();
+const pendingTodos = await todo.findPending();
+```
+
+**Returns:** Array of todo objects with status "Pending"
+
+#### `findInProgress()`
+
+Retrieves all todos with status "In Progress".
+
+**Usage:**
+
+```javascript
+const todo = new Todo();
+const inProgressTodos = await todo.findInProgress();
+```
+
+**Returns:** Array of todo objects with status "In Progress"
+
 ## Project Structure
 
 ```
